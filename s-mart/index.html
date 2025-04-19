@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUMART - Educational Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #e0f7fa, #b2ebf2);
+            color: #263238;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #26c6da, #00acc1);
+            color: white;
+            padding: 25px 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: background 0.5s ease, transform 0.3s ease;
+        }
+
+        header:hover {
+            transform: translateY(-2px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            transition: transform 0.6s ease, box-shadow 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: rotate(360deg) scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        }
+
+        .app-name {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .app-name:hover {
+            color: #80deea;
+            text-shadow: 0 0 10px rgba(128, 222, 234, 0.8);
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 40px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .search-bar:hover {
+            transform: scale(1.03);
+        }
+
+        .search-bar input {
+            width: 70%;
+            padding: 14px;
+            border: none;
+            border-radius: 30px 0 0 30px;
+            outline: none;
+            font-size: 16px;
+            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.1);
+            border-color: #26c6da;
+        }
+
+        .search-bar select {
+            padding: 14px;
+            border: none;
+            outline: none;
+            background: #fff;
+            border-radius: 0;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .search-bar select:hover {
+            background: #80deea;
+            transform: scale(1.05);
+        }
+
+        .search-bar button {
+            padding: 14px 25px;
+            border: none;
+            background-color: #00acc1;
+            color: white;
+            border-radius: 0 30px 30px 0;
+            cursor: pointer;
+            transition: background-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .search-bar button:hover {
+            background-color: #4dd0e1;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(77, 208, 225, 0.5);
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item {
+            padding: 14px 30px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 35px;
+            cursor: pointer;
+            transition: background-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.15) rotate(3deg);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .dropdown {
+            position: absolute;
+            background: linear-gradient(to bottom, #fff, #e0f7fa);
+            color: #263238;
+            border: 1px solid #b2ebf2;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.4s ease-out;
+            z-index: 1000;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .dropdown.hidden {
+            display: none;
+        }
+
+        .dropdown > div {
+            display: block; /* Ensure forms stack vertically */
+        }
+
+        .dropdown > div.hidden {
+            display: none; /* Hide individual forms */
+        }
+
+        #sellDropdown, #profileDropdown, #cartDropdown, #helpDropdown {
+            top: 110px;
+            right: 25px;
+            width: 340px;
+        }
+
+        .dropdown h2, .dropdown p.dropdown-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #26c6da;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .dropdown h2:hover, .dropdown p.dropdown-title:hover {
+            color: #80deea;
+            transform: scale(1.05);
+        }
+
+        .dropdown input, .dropdown select, .dropdown textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #b2ebf2;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .dropdown input:focus, .dropdown select:focus, .dropdown textarea:focus {
+            border-color: #26c6da;
+            box-shadow: 0 0 10px rgba(38, 198, 218, 0.4);
+            transform: scale(1.02);
+        }
+
+        .dropdown textarea {
+            height: 110px;
+            resize: none;
+        }
+
+        .dropdown #imagePreview {
+            max-width: 100%;
+            margin: 20px 0;
+            border-radius: 10px;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .dropdown #imagePreview:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .dropdown button {
+            width: 100%;
+            padding: 14px;
+            background-color: #26c6da;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            font-weight: 500;
+        }
+
+        .dropdown button:hover {
+            background-color: #00acc1;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(38, 198, 218, 0.5);
+        }
+
+        .dropdown a {
+            color: #26c6da;
+            text-decoration: none;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .dropdown a:hover {
+            color: #80deea;
+            transform: translateX(5px);
+        }
+
+        .billboard {
+            background: linear-gradient(135deg, #f6fafb, #8ee2e2);
+            padding: 40px;
+            margin: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: #576f7b;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .billboard:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .offers-container {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            margin-top: 20px;
+        }
+
+        .offer {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: transform 0.4s ease, background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .offer:hover {
+            transform: scale(1.1) rotate(4deg);
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        main {
+            padding: 50px;
+        }
+
+        h2 {
+            font-size: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #26c6da;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        h2:hover {
+            color: #80deea;
+            transform: scale(1.05);
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .product-item {
+            background: linear-gradient(to bottom, #fff, #e0f7fa);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+            animation: slideIn 0.4s ease-out;
+            width: 200px;
+        }
+
+        .product-item:hover {
+            transform: translateY(-8px) rotate(2deg);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to bottom, #fff, #80deea);
+        }
+
+        .product-item img {
+            max-width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            transition: transform 0.4s ease, box-shadow 0.3s ease;
+        }
+
+        .product-item img:hover {
+            transform: scale(1.08);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-item h3 {
+            font-size: 16px;
+            margin: 8px 0;
+            color: #263238;
+        }
+
+        .product-item p {
+            font-size: 12px;
+            color: #576f7b;
+            margin: 4px 0;
+        }
+
+        .product-item button {
+            margin: 8px 0;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .product-item button:hover {
+            background-color: #388e3c;
+            transform: scale(1.12);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.5);
+        }
+
+        footer {
+            background: linear-gradient(135deg, #26c6da, #00acc1);
+            color: white;
+            padding: 60px 40px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.1);
+            transition: background 0.5s ease, transform 0.3s ease;
+        }
+
+        footer:hover {
+            transform: translateY(-2px);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .footer-section h3:hover {
+            color: #80deea;
+            transform: scale(1.05);
+        }
+
+        .footer-section a, .footer-section p {
+            color: white;
+            text-decoration: none;
+            margin: 10px 0;
+            display: block;
+            font-size: 15px;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: #80deea;
+            transform: translateX(8px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 15px;
+            opacity: 0.9;
+            transition: opacity 0.3s ease, color 0.3s ease;
+        }
+
+        .footer-bottom:hover {
+            opacity: 1;
+            color: #80deea;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-25px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="assets/logo.jpg" alt="STUMART Logo" class="logo">
+            <span class="app-name">STUMART</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search items by title, category..." id="searchInput">
+            <select id="searchFilter">
+                <option value="all">All</option>
+                <option value="price">Price: Low to High</option>
+                <option value="condition">Condition</option>
+                <option value="category">Category</option>
+            </select>
+            <button onclick="searchItems()" aria-label="Search"><i class="fas fa-search"></i></button>
+        </div>
+        <nav class="header-nav">
+            <div class="nav-item" onclick="toggleProfile()">Profile</div>
+            <div class="nav-item" onclick="toggleSell()">Sell</div>
+            <div class="nav-item cart" onclick="toggleCart()">Cart (<span id="cartCount">0</span>)</div>
+            <div class="nav-item" onclick="toggleHelp()">Help</div>
+        </nav>
+    </header>
+
+    <div id="sellDropdown" class="dropdown hidden">
+        <p class="dropdown-title">List an Item</p>
+        <input type="text" id="itemTitle" placeholder="Title (e.g., Book, Drafter, Calculator)">
+        <input type="text" id="itemAuthor" placeholder="Author/Manufacturer (optional)">
+        <select id="itemCategory">
+            <option value="Textbooks">Textbooks</option>
+            <option value="Fiction">Fiction</option>
+            <option value="Non-Fiction">Non-Fiction</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Engineering Tools">Engineering Tools</option>
+            <option value="Calculators">Calculators</option>
+            <option value="Drafting Tools">Drafting Tools</option>
+            <option value="Lab Equipment">Lab Equipment</option>
+            <option value="Other">Other</option>
+        </select>
+        <input type="number" id="itemPrice" placeholder="Price ($)" step="0.01">
+        <select id="itemCondition">
+            <option value="New">New</option>
+            <option value="Used - Like New">Used - Like New</option>
+            <option value="Used - Good">Used - Good</option>
+            <option value="Used - Acceptable">Used - Acceptable</option>
+        </select>
+        <textarea id="conditionDesc" placeholder="Describe condition (e.g., scratches, usage)"></textarea>
+        <input type="file" id="itemImage" accept="image/*" onchange="previewImage()">
+        <img id="imagePreview" src="" alt="Item Preview" class="hidden">
+        <button onclick="listItem()">List Now</button>
+    </div>
+
+    <div id="profileDropdown" class="dropdown hidden">
+        <div id="loginForm">
+            <h2>Sign In</h2>
+            <input type="email" id="email" placeholder="Enter your email" required>
+            <input type="password" id="password" placeholder="Enter your password" required>
+            <button onclick="login()">Sign In</button>
+            <p id="authMessage"></p>
+            <p>New to STUMART? <a href="#" onclick="showSignup()">Create your STUMART account</a></p>
+        </div>
+        <div id="signupForm" class="hidden">
+            <h2>Create Account</h2>
+            <input type="text" id="username" placeholder="Enter your username" required>
+            <input type="email" id="signupEmail" placeholder="Enter your email" required>
+            <input type="password" id="signupPassword" placeholder="Enter your password" required>
+            <button onclick="signup()">Create Account</button>
+            <p id="signupMessage"></p>
+            <a href="#" onclick="showLogin()">Back to Sign In</a>
+        </div>
+        <div id="otpForm" class="hidden">
+            <h2>Verify OTP</h2>
+            <input type="text" id="otp" placeholder="Enter the OTP from your email" required>
+            <button onclick="verifyOtp()">Verify</button>
+            <p id="otpMessage"></p>
+            <a href="#" onclick="resendOtp()">Resend OTP</a>
+        </div>
+        <div id="profileContent" class="hidden">
+            <h2>Your Profile</h2>
+            <p id="profileMessage"></p>
+            <button onclick="logout()">Sign Out</button>
+        </div>
+    </div>
+
+    <div id="cartDropdown" class="dropdown hidden">
+        <p class="dropdown-title">Your Cart</p>
+        <div id="cartItems" class="product-list"></div>
+        <p>Total: $<span id="cartTotal">0.00</span></p>
+        <button onclick="proceedToPayment()">Proceed to Payment</button>
+        <button onclick="checkout()">Clear Cart</button>
+    </div>
+
+    <div id="helpDropdown" class="dropdown hidden">
+        <p class="dropdown-title">Need Assistance?</p>
+        <a href="#">FAQs</a>
+        <a href="#">Contact Support</a>
+        <a href="#">Selling Guide</a>
+    </div>
+
+    <main>
+        <div class="billboard">
+            <h2>Current Offers & Sales</h2>
+            <div id="offers" class="offers-container">
+                <div class="offer">10% off Textbooks!</div>
+                <div class="offer">Free Shipping on Calculators!</div>
+            </div>
+        </div>
+        <h2>Featured Items</h2>
+        <div class="product-list" id="productList"></div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>STUMART</h3>
+                <p>Your one-stop shop for student books and engineering materials.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="#">About Us</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>Email: <a href="mailto:support@stumart.com">support@stumart.com</a></p>
+                <p>Phone: (123) 456-7890</p>
+            </div>
+        </div>
+        <p class="footer-bottom">© 2025 STUMART. All rights reserved.</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/items.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
